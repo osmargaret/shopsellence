@@ -51,7 +51,7 @@ export default function Navbar() {
           </li>
           <li>
             <NavLink to="/wardrobe" className={({ isActive }) => (isActive ? 'active' : '')}>
-              Wardrobe
+              Store
             </NavLink>
           </li>
           <li>

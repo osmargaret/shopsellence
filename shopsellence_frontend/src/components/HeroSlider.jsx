@@ -14,7 +14,7 @@ export default function HeroSlider() {
         </>
       ),
       description: 'Discover the latest collections at Shopsellence – where elegance meets culture.',
-      btnText: 'Explore Wardrobe →',
+      btnText: 'Explore Store →',
       decorStyles: [{}, {}, {}]
     },
     {
