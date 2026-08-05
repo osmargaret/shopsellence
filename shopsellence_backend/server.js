@@ -385,15 +385,3 @@ app.get('/api/analytics', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', database: db.dbType });
 });
-
-// ============================================================
-// START SERVER
-// ============================================================
-db.initDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Shopsellence API running on port ${PORT}`);
-  });
-}).catch((err) => {
-  console.error('❌ Failed to initialize database:', err);
-  process.exit(1);
-});
