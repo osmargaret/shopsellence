@@ -1367,6 +1367,8 @@ img {
   color: var(--white);
   min-height: 100vh;
   display: flex;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .admin-sidebar {
@@ -1381,6 +1383,7 @@ img {
   bottom: 0;
   left: 0;
   z-index: 100;
+  overflow-y: auto; /* Let sidebar scroll independently if height is small */
 }
 
 .admin-brand-header {
@@ -1456,7 +1459,10 @@ img {
   flex: 1;
   padding: 40px;
   min-height: 100vh;
+  min-width: 0; /* Important: allows content to shrink below content size under flex layout */
+  max-width: 100%;
 }
+
 
 .admin-content-header {
   display: flex;
@@ -1475,6 +1481,12 @@ img {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 
 .btn-admin-primary {
@@ -1870,10 +1882,12 @@ img {
     font-size: 1.8rem;
   }
 
-  .admin-content-header div {
-    width: 100%;
-    flex-direction: column;
+  .admin-content-header div,
+  .admin-header-actions {
+    width: 100% !important;
+    flex-direction: column !important;
     align-items: stretch !important;
+    gap: 12px !important;
   }
 
   .admin-content-header input {

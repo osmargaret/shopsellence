@@ -167,35 +167,18 @@ export default function Wardrobe() {
             <div style={{ marginBottom: '40px', textAlign: 'center' }}>
               <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255,255,255,0.4)', marginBottom: '10px', fontWeight: 600 }}>Filter by Tag:</div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => { setActiveTag(''); setCurrentPage(1); }}
-                  style={{
-                    padding: '6px 16px',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    background: activeTag === '' ? 'var(--gold)' : 'transparent',
-                    color: activeTag === '' ? 'var(--purple-950)' : 'rgba(255, 255, 255, 0.7)',
-                    fontSize: '0.85rem',
-                    fontWeight: activeTag === '' ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    outline: 'none'
-                  }}
-                >
-                  All Tags
-                </button>
                 {uniqueTags.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => { setActiveTag(tag); setCurrentPage(1); }}
+                    onClick={() => { setActiveTag(prev => (prev || '').toLowerCase() === tag.toLowerCase() ? '' : tag); setCurrentPage(1); }}
                     style={{
                       padding: '6px 16px',
                       borderRadius: '20px',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
-                      background: activeTag.toLowerCase() === tag.toLowerCase() ? 'var(--gold)' : 'transparent',
-                      color: activeTag.toLowerCase() === tag.toLowerCase() ? 'var(--purple-950)' : 'rgba(255, 255, 255, 0.7)',
+                      background: (activeTag || '').toLowerCase() === tag.toLowerCase() ? 'var(--gold)' : 'transparent',
+                      color: (activeTag || '').toLowerCase() === tag.toLowerCase() ? 'var(--purple-950)' : 'rgba(255, 255, 255, 0.7)',
                       fontSize: '0.85rem',
-                      fontWeight: activeTag.toLowerCase() === tag.toLowerCase() ? 700 : 500,
+                      fontWeight: (activeTag || '').toLowerCase() === tag.toLowerCase() ? 700 : 500,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       textTransform: 'capitalize',

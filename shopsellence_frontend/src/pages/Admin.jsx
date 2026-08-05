@@ -506,7 +506,7 @@ export default function Admin() {
             {activeTab === 'dashboard' ? 'Overview' : activeTab === 'outfits' ? 'Inventory' : activeTab}
           </h1>
           {activeTab === 'outfits' && (
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div className="admin-header-actions">
               <input
                 type="text"
                 placeholder="🔍 Search name or price..."
