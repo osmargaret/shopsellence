@@ -1253,45 +1253,6 @@ export default function Admin() {
         </div>
       )}
 
-      {/* VIEWING CRM NOTES MODAL */}
-      {viewingNotes && (
-        <div className="modal-overlay open" style={{ display: 'flex' }} onClick={() => setViewingNotes(null)}>
-          <div className="modal" style={{ maxWidth: '450px', background: '#1C1026' }} onClick={(e) => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setViewingNotes(null)}>✕</button>
-            <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--gold)', marginBottom: '16px' }}>
-              📐 Custom Sizing Notes
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.95rem' }}>
-              <div>
-                <strong>Client:</strong> {viewingNotes.name}
-              </div>
-              <div>
-                <strong>Height:</strong> {viewingNotes.height || '-'}
-              </div>
-              <div style={{
-                marginTop: '10px',
-                background: 'rgba(0,0,0,0.25)',
-                padding: '16px',
-                borderRadius: '8px',
-                borderLeft: '3px solid var(--purple-500)'
-              }}>
-                <strong style={{ color: 'var(--gold-light)', display: 'block', marginBottom: '6px' }}>Special Request Guidelines:</strong>
-                <p style={{ lineHeight: 1.5, color: 'rgba(255,255,255,0.9)' }}>
-                  {viewingNotes.notes || 'No custom notes provided.'}
-                </p>
-              </div>
-            </div>
-            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                className="btn-admin-primary"
-                onClick={() => setViewingNotes(null)}
-              >
-                Close Notes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
