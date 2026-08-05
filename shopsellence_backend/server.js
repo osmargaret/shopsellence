@@ -389,8 +389,6 @@ app.get('/api/health', (req, res) => {
 // ============================================================
 // START SERVER
 // ============================================================
-const PORT = process.env.PORT || 5000;
-
 db.initDb().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Shopsellence API running on port ${PORT}`);
