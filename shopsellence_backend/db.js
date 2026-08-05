@@ -193,6 +193,67 @@ async function initDb() {
     }
     console.log('✅ Seeding complete.');
   }
+
+  // Seed new default outfits individually if they are missing
+  const extraOutfits = [
+    {
+      name: 'Bonito Estilo',
+      category: 'shoes',
+      image: 'shopsellence_images/Bonito.png',
+      price: '₦120,000',
+      oldPrice: '₦150,000',
+      description: 'Bespoke premium leather shoes crafted with styling and ultimate comfort in mind.',
+      colours: JSON.stringify(['#000000', '#1F2937']),
+      sizes: '40, 41, 42, 43, 44, 45',
+      fabric: 'Genuine Leather',
+      availability: 'In Stock',
+      badge: 'new',
+      badgeText: 'Trending',
+      tags: JSON.stringify(['Shoes'])
+    },
+    {
+      name: 'White Leather Rossi',
+      category: 'shoes',
+      image: 'shopsellence_images/White Leather Rossi.png',
+      price: '₦120,000',
+      oldPrice: '₦150,000',
+      description: 'Classic luxury white leather shoes tailored for maximum sophistication.',
+      colours: JSON.stringify(['#FFFFFF']),
+      sizes: '40, 41, 42, 43, 44, 45',
+      fabric: 'Genuine Italian Leather',
+      availability: 'In Stock',
+      badge: 'new',
+      badgeText: 'Premium',
+      tags: JSON.stringify(['Shoes'])
+    },
+    {
+      name: 'Rossi Sport Classic',
+      category: 'shoes',
+      image: 'shopsellence_images/ROSSI.png',
+      price: '₦125,000',
+      oldPrice: '₦160,000',
+      description: 'Handcrafted luxury sport shoes designed for comfort and active styling.',
+      colours: JSON.stringify(['#000000', '#8B5A2B']),
+      sizes: '40, 41, 42, 43, 44, 45',
+      fabric: 'Genuine Leather',
+      availability: 'In Stock',
+      badge: 'luxury',
+      badgeText: 'Classic',
+      tags: JSON.stringify(['Shoes'])
+    }
+  ];
+
+  for (const item of extraOutfits) {
+    const check = await query('SELECT COUNT(*) as count FROM outfits WHERE name = ?', [item.name]);
+    if (parseInt(check[0].count || check[0].COUNT || 0) === 0) {
+      console.log(`🌱 Seeding missing outfit: ${item.name}`);
+      await run(
+        `INSERT INTO outfits (name, category, image, price, oldPrice, description, colours, sizes, fabric, availability, badge, badgeText, tags)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [item.name, item.category, item.image, item.price, item.oldPrice, item.description, item.colours, item.sizes, item.fabric, item.availability, item.badge, item.badgeText, item.tags]
+      );
+    }
+  }
 }
 
 module.exports = {
