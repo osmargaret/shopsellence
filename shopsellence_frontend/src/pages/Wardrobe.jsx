@@ -31,7 +31,7 @@ export default function Wardrobe() {
     // Fetch outfits
     const fetchOutfits = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/outfits`);
+        const response = await fetch(`${API_URL}/api/outfits?t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           setOutfits(data);

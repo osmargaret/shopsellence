@@ -21,7 +21,7 @@ export default function Home() {
     // Fetch outfits
     const fetchFeatured = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/outfits`);
+        const response = await fetch(`${API_URL}/api/outfits?t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           // Filter to first 6 items

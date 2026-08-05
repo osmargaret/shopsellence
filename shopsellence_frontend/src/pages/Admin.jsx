@@ -79,21 +79,21 @@ export default function Admin() {
   const fetchDashboardData = async () => {
     try {
       // 1. Fetch Outfits
-      const outfitsRes = await fetch(`${API_URL}/api/outfits`);
+      const outfitsRes = await fetch(`${API_URL}/api/outfits?t=${Date.now()}`);
       if (outfitsRes.ok) {
         const data = await outfitsRes.json();
         setOutfits(data);
       }
 
       // 2. Fetch Enquiries
-      const enquiriesRes = await fetch(`${API_URL}/api/enquiries`);
+      const enquiriesRes = await fetch(`${API_URL}/api/enquiries?t=${Date.now()}`);
       if (enquiriesRes.ok) {
         const data = await enquiriesRes.json();
         setEnquiries(data);
       }
 
       // 4. Fetch Analytics
-      const analyticsRes = await fetch(`${API_URL}/api/analytics`);
+      const analyticsRes = await fetch(`${API_URL}/api/analytics?t=${Date.now()}`);
       if (analyticsRes.ok) {
         const data = await analyticsRes.json();
         setAnalytics(data);
