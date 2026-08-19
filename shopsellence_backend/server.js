@@ -5,8 +5,16 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const db = require('./db');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 
 dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const app = express();
 
@@ -30,6 +38,22 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
+
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: 'shopsellence_outfits' },
+      (error, result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(error);
+        }
+      }
+    );
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
+};
 
 function getAdminPasscode() {
   if (fs.existsSync(configPath)) {
@@ -130,9 +154,15 @@ app.post('/api/outfits', upload.single('imageFile'), async (req, res) => {
     const { name, category, price, oldPrice, description, colours, sizes, fabric, availability, badge, badgeText, tags } = req.body;
     let imageUrl = req.body.image || '';
 
-    // If an image file is uploaded, convert it to base64
+    // If an image file is uploaded, upload to Cloudinary
     if (req.file) {
-      imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      try {
+        const uploadResult = await uploadToCloudinary(req.file.buffer);
+        imageUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+      }
     }
 
     if (!name || !category || !price) {
@@ -187,7 +217,13 @@ app.put('/api/outfits/:id', upload.single('imageFile'), async (req, res) => {
 
     let imageUrl = req.body.image || match[0].image;
     if (req.file) {
-      imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      try {
+        const uploadResult = await uploadToCloudinary(req.file.buffer);
+        imageUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload image to Cloudinary.' });
+      }
     }
 
     let colorsStr = match[0].colours;
