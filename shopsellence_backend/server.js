@@ -7,6 +7,7 @@ const multer = require('multer');
 const db = require('./db');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
@@ -17,6 +18,12 @@ cloudinary.config({
 });
 
 const app = express();
+
+let otpCache = {
+  code: null,
+  expires: null,
+  email: null
+};
 
 // Increase JSON payload limits to allow Base64 image uploads
 app.use(cors());
@@ -63,6 +70,16 @@ function getAdminPasscode() {
     } catch (e) { /* fall through */ }
   }
   return process.env.ADMIN_PASSCODE || 'Shopsellence2026';
+}
+
+function getAdminEmail() {
+  if (fs.existsSync(configPath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (parsed.adminEmail) return parsed.adminEmail;
+    } catch (e) { /* fall through */ }
+  }
+  return process.env.ADMIN_EMAIL || 'admin@shopsellence.com';
 }
 
 // Initialize database schema and server
@@ -112,6 +129,86 @@ app.post('/api/change-passcode', (req, res) => {
     res.json({ success: true, message: 'Passcode updated successfully.' });
   } catch (e) {
     console.error('Failed to update passcode:', e);
+    res.status(500).json({ error: 'Failed to save new passcode.' });
+  }
+});
+
+app.post('/api/forgot-passcode', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+  const adminEmail = getAdminEmail();
+  if (email.toLowerCase() !== adminEmail.toLowerCase()) {
+    return res.status(401).json({ error: 'This email is not registered as the admin.' });
+  }
+
+  // Generate 6 digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpCache = {
+    code: otp,
+    expires: Date.now() + 10 * 60 * 1000, // 10 minutes
+    email: email.toLowerCase()
+  };
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    await transporter.sendMail({
+      from: `"Shopsellence Admin" <${process.env.SMTP_USER || 'noreply@shopsellence.com'}>`,
+      to: adminEmail,
+      subject: 'Shopsellence Admin - Password Reset Code',
+      text: `Your password reset code is: ${otp}\nThis code will expire in 10 minutes.`,
+      html: `<h3>Shopsellence Admin</h3><p>Your password reset code is: <strong>${otp}</strong></p><p>This code will expire in 10 minutes.</p>`
+    });
+
+    res.json({ success: true, message: 'OTP sent to your email.' });
+  } catch (err) {
+    console.error('Failed to send email:', err);
+    res.status(500).json({ error: 'Failed to send OTP email. Please check SMTP settings.' });
+  }
+});
+
+app.post('/api/reset-passcode', (req, res) => {
+  const { email, code, newPasscode } = req.body;
+
+  if (!email || !code || !newPasscode) {
+    return res.status(400).json({ error: 'Email, code, and new passcode are required.' });
+  }
+
+  if (newPasscode.length < 6) {
+    return res.status(400).json({ error: 'New passcode must be at least 6 characters.' });
+  }
+
+  if (!otpCache.code || otpCache.email !== email.toLowerCase() || Date.now() > otpCache.expires) {
+    return res.status(400).json({ error: 'Invalid or expired OTP code.' });
+  }
+
+  if (otpCache.code !== code) {
+    return res.status(401).json({ error: 'Incorrect OTP code.' });
+  }
+
+  try {
+    let config = {};
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+    config.adminPasscode = newPasscode;
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    
+    // Clear OTP
+    otpCache = { code: null, expires: null, email: null };
+
+    res.json({ success: true, message: 'Passcode reset successfully. You can now log in.' });
+  } catch (e) {
+    console.error('Failed to reset passcode:', e);
     res.status(500).json({ error: 'Failed to save new passcode.' });
   }
 });

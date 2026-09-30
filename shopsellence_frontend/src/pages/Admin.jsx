@@ -6,6 +6,14 @@ export default function Admin() {
   const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
   
+  // Forgot Password State
+  const [isForgotMode, setIsForgotMode] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
+  const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPasscode, setNewPasscode] = useState('');
+  const [resetMessage, setResetMessage] = useState({ type: '', text: '' });
+  
   // Dashboard state
   const [activeTab, setActiveTab] = useState('dashboard');
   const [outfits, setOutfits] = useState([]);
@@ -122,6 +130,55 @@ export default function Admin() {
       }
     } catch (err) {
       setLoginError('Error connecting to backend API.');
+    }
+  };
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setResetMessage({ type: '', text: 'Sending code...' });
+    try {
+      const response = await fetch(`${API_URL}/api/forgot-passcode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setResetMessage({ type: 'success', text: 'OTP sent to your email.' });
+        setForgotStep(2);
+      } else {
+        setResetMessage({ type: 'error', text: data.error || 'Failed to send OTP.' });
+      }
+    } catch (err) {
+      setResetMessage({ type: 'error', text: 'Error connecting to backend API.' });
+    }
+  };
+
+  const handleResetPasscode = async (e) => {
+    e.preventDefault();
+    setResetMessage({ type: '', text: '' });
+    try {
+      const response = await fetch(`${API_URL}/api/reset-passcode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: otpCode, newPasscode })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setResetMessage({ type: 'success', text: 'Passcode reset successfully!' });
+        setTimeout(() => {
+          setIsForgotMode(false);
+          setForgotStep(1);
+          setEmail('');
+          setOtpCode('');
+          setNewPasscode('');
+          setResetMessage({ type: '', text: '' });
+        }, 2000);
+      } else {
+        setResetMessage({ type: 'error', text: data.error || 'Failed to reset passcode.' });
+      }
+    } catch (err) {
+      setResetMessage({ type: 'error', text: 'Error connecting to backend API.' });
     }
   };
 
@@ -339,47 +396,206 @@ export default function Admin() {
         }}>
           <img src="/shopsellence_images/logo.png" alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'cover', margin: '0 auto 16px', border: '2px solid var(--gold)', borderRadius: '50%' }} />
           <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--gold)', marginBottom: '8px' }}>Shopsellence Admin</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '24px' }}>Please authenticate using the admin passcode</p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '24px' }}>
+            {isForgotMode ? 'Reset your admin passcode' : 'Please authenticate using the admin passcode'}
+          </p>
           
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              placeholder="Enter admin passcode"
-              required
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                border: '2px solid rgba(255,255,255,0.1)',
-                background: 'rgba(0,0,0,0.2)',
-                color: 'white',
-                fontSize: '1rem',
-                marginBottom: '16px',
-                textAlign: 'center',
-                outline: 'none'
-              }}
-            />
-            {loginError && <p style={{ color: 'var(--red-500)', fontSize: '0.85rem', marginBottom: '16px' }}>⚠️ {loginError}</p>}
-            <button
-              type="submit"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'linear-gradient(135deg, var(--gold), var(--gold-light))',
-                color: 'var(--purple-950)',
-                fontWeight: 700,
-                fontSize: '1rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(212,175,55,0.3)'
-              }}
-            >
-              Sign In ✦
-            </button>
-          </form>
+          {isForgotMode ? (
+            forgotStep === 1 ? (
+              <form onSubmit={handleSendOtp}>
+                <input
+                  type="email"
+                  placeholder="Enter Admin Email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: 'white',
+                    fontSize: '1rem',
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                    outline: 'none'
+                  }}
+                />
+                {resetMessage.text && (
+                  <p style={{ color: resetMessage.type === 'success' ? 'var(--green-500)' : resetMessage.type === 'error' ? 'var(--red-500)' : 'var(--gold-light)', fontSize: '0.85rem', marginBottom: '16px' }}>
+                    {resetMessage.type === 'success' ? '✅' : resetMessage.type === 'error' ? '⚠️' : '⏳'} {resetMessage.text}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, var(--gold), var(--gold-light))',
+                    color: 'var(--purple-950)',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(212,175,55,0.3)',
+                    marginBottom: '16px'
+                  }}
+                >
+                  Send OTP ✦
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotMode(false); setResetMessage({type:'', text:''}); setForgotStep(1); setEmail(''); }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--gold-light)',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Back to Sign In
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPasscode}>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  required
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: 'white',
+                    fontSize: '1rem',
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                    outline: 'none',
+                    letterSpacing: '4px'
+                  }}
+                />
+                <input
+                  type="password"
+                  placeholder="Enter New Passcode"
+                  required
+                  value={newPasscode}
+                  onChange={(e) => setNewPasscode(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: 'white',
+                    fontSize: '1rem',
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                    outline: 'none'
+                  }}
+                />
+                {resetMessage.text && (
+                  <p style={{ color: resetMessage.type === 'success' ? 'var(--green-500)' : 'var(--red-500)', fontSize: '0.85rem', marginBottom: '16px' }}>
+                    {resetMessage.type === 'success' ? '✅' : '⚠️'} {resetMessage.text}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, var(--gold), var(--gold-light))',
+                    color: 'var(--purple-950)',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(212,175,55,0.3)',
+                    marginBottom: '16px'
+                  }}
+                >
+                  Reset Passcode ✦
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setForgotStep(1); setResetMessage({type:'', text:''}); setOtpCode(''); setNewPasscode(''); }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--gold-light)',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Back to Email Input
+                </button>
+              </form>
+            )
+          ) : (
+            <form onSubmit={handleLogin}>
+              <input
+                type="password"
+                placeholder="Enter admin passcode"
+                required
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '2px solid rgba(255,255,255,0.1)',
+                  background: 'rgba(0,0,0,0.2)',
+                  color: 'white',
+                  fontSize: '1rem',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                  outline: 'none'
+                }}
+              />
+              {loginError && <p style={{ color: 'var(--red-500)', fontSize: '0.85rem', marginBottom: '16px' }}>⚠️ {loginError}</p>}
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, var(--gold), var(--gold-light))',
+                  color: 'var(--purple-950)',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(212,175,55,0.3)',
+                  marginBottom: '16px'
+                }}
+              >
+                Sign In ✦
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsForgotMode(true)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  textDecoration: 'underline'
+                }}
+              >
+                Forgot Passcode?
+              </button>
+            </form>
+          )}
         </div>
       </div>
     );
